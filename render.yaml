@@ -1,0 +1,33 @@
+services:
+  - type: web
+    name: invoice-action-agent
+    runtime: python
+    # Persistent disks need a paid instance type. The free plan has no disk, so task state would be lost on restart.
+    plan: starter
+    region: oregon
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:create_app --factory --host 0.0.0.0 --port $PORT --workers 1
+    healthCheckPath: /.well-known/agent-card.json
+    disk:
+      name: invoice-agent-data
+      mountPath: /var/data
+      sizeGB: 1
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.13.4
+      - key: DATA_DIR
+        value: /var/data
+      - key: ANTHROPIC_API_KEY
+        sync: false # paste your Anthropic API key in the Render dashboard, never in this file
+      - key: PUBLIC_BASE_URL
+        sync: false # the exact base URL you submit to the grader, for example https://invoice-action-agent.onrender.com/a2a/
+      - key: ANTHROPIC_MODEL
+        value: claude-opus-5-5
+      - key: ANTHROPIC_EFFORT
+        value: medium
+      - key: DECISION_BUDGET_SECONDS
+        value: "38"
+      - key: DAILY_MODEL_CALL_LIMIT
+        value: "400"
+      - key: A2A_ALLOWED_TOKENS
+        sync: false # optional: comma-separated tokens allowed to call the agent; leave unset to accept any Bearer token
